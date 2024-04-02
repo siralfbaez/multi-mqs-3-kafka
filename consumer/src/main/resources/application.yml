@@ -1,0 +1,70 @@
+logging:
+  level:
+    root: info
+spring:
+  cloud:
+    function:
+      definition: usSink; irelandSink
+    stream:
+      binders:
+        kafka1:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      brokers: localhost:9092
+                      min-partition-count: 1
+                      producer-properties:
+                        key:
+                          serializer: org.apache.kafka.common.serialization.StringSerializer
+                        value:
+                          serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+                          subject:
+                            name:
+                              strategy: io.confluent.kafka.serializers.subject.RecordNameStrategy
+                        schema:
+                          registry:
+                            url: http://localhost:8081
+        usBinder:
+          type: rabbit
+          environment:
+            spring:
+              rabbitmq:
+                host: localhost
+                port: 5672
+        irelandBinder:
+          type: rabbit
+          environment:
+            spring:
+              rabbitmq:
+                host: localhost
+                port: 5673
+      bindings:
+        usSink-in-0:
+          destination: entries
+          group: customers
+          binder: usBinder
+          consumer:
+            bindQueue: false
+            declareExchange: false
+            queueNameGroupOnly: true
+        irelandSink-in-0:
+          destination: entries
+          group: customers
+          binder: irelandBinder
+          consumer:
+            bindQueue: false
+            declareExchange: false
+            queueNameGroupOnly: true
+        customers-out-0:
+          destination: customer-events
+          binder: kafka1
+          content-type: application/*+avro
+          producer:
+            use-native-encoding: true
+      default-binder: kafka1
+server:
+  port: 0

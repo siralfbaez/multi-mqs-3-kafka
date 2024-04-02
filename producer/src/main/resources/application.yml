@@ -1,0 +1,33 @@
+spring:
+  cloud:
+    stream:
+      binders:
+        usBinder:
+          type: rabbit
+          environment:
+            spring:
+              rabbitmq:
+                host: localhost
+                port: 5672
+        irelandBinder:
+          type: rabbit
+          environment:
+            spring:
+              rabbitmq:
+                host: localhost
+                port: 5673
+      bindings:
+        first-out-0:
+          destination: entries
+          group: customers
+          binder: usBinder
+          producer:
+            required-groups:
+              - customers
+        second-out-0:
+          destination: entries
+          group: customers
+          binder: irelandBinder
+          producer:
+            required-groups:
+              - customers
